@@ -1,6 +1,5 @@
 # MAPLETHEDOG
 from javascript import require, On, Once, AsyncTask, once, off, start, stop, abort
-print("hello")
 import logging
 from datetime import datetime
 import sys
@@ -13,7 +12,6 @@ mineflayer = require("mineflayer")
 
 load_dotenv()
 
-#def main(config: dict, botInfo: dict, password: str):
 ### CONFIG
 import configValidator
 config = configValidator.validate()
@@ -24,7 +22,6 @@ logLevel = eval("logging." + config.logLevel)
 logging.basicConfig(format=f"%(levelname)s : %(name)s : %(asctime)s : %(process)d : %(thread)d : %(message)s", datefmt="%Y/%m/%d %H:%M:%S", encoding="utf-8", level=logLevel, handlers=[logging.FileHandler(logFile, mode="w"), logging.StreamHandler()]) #filename=f"logs/{datetime.strftime(datetime.now(), '%Y%m%d_%H%M%S')}.log", filemode="a", 
 logging.debug("Hello! Logging init.")
 
-#bot = mineflayer.createBot({ 'host': 'anarchy.8b8t.me', 'port': 25565, 'username': BOT_USERNAME, 'hideErrors': False })
 if config.botInfo["useEnvironmentVar"]:
     PASSWORD = os.environ[config.botInfo["password"]]
 else:
@@ -39,17 +36,11 @@ botInfo = {
     "auth": config.botInfo["auth"],
     "version": config.botInfo["version"]
 }
-print(botInfo)
 
 bot = mineflayer.createBot(botInfo)
 
 onListeners = []
 asyncTasks = []
-
-#once(bot, "login")
-#logging.info("Bot logged into auth")
-
-#bot.chat(f"/login {PASSWORD}")
 
 def end(code):
     bot.quit()
@@ -59,16 +50,12 @@ def end(code):
         abort(task)
     logging.debug("Goodbye! Logging shutdown.")
     logging.shutdown()
-    #raise Exception()
     sys.exit(0)
 
 @AsyncTask(start=True)
-#def join(task):
-#@On(bot, "login")
 def join(task):
     once(bot, "login")
     once(bot, "spawn")
-    #mineflayerViewer(bot, { "port": 5292, "firstPerson": True })
     logging.info("Bot logged on to auth")
 
     global isLoggedIn
@@ -87,7 +74,7 @@ def join(task):
                 logging.info("Bot is now logged in")
                 isLoggedIn = True
             if isLoggedIn:
-                if "Kicked whilst" in msg:
+                if "Kicked whilst" in msg or "Could not connect" in msg:
                     logging.info(f"Bot was unable to connect to main server with reason '{msg}'")
                     end(1)
         else:
@@ -102,13 +89,20 @@ def join(task):
                 sys.exit(1)
     onListeners.append(("message", recv_login_msg))
     
-    once(bot, "spawn") # TODO: fix this to actually check, this also gets called on death
+    while True:
+        msgJson = once(bot, "message")
+        msg = msgJson.toString()
+        if "Successful login!" in msg:
+            break
+    while True:
+        msgJson = once(bot, "message")
+        msg = msgJson.toString()
+        if "joined the game" in msg:
+            break
+    once(bot, "spawn")
     logging.info("Bot spawned into main")
-    #once(bot, "spawn")
-    #logging.debug("Bot spawned into main")
     off(bot, "message", recv_login_msg)
     onListeners.remove(("message", recv_login_msg))
-    #bot.chat("HI")
     logging.debug("success")
 asyncTasks.append(join)
 
