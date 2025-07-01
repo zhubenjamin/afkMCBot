@@ -74,7 +74,7 @@ def join(task):
                 logging.info("Bot is now logged in")
                 isLoggedIn = True
             if isLoggedIn:
-                if "Kicked whilst" in msg:
+                if "Kicked whilst" in msg or "Could not connect" in msg:
                     logging.info(f"Bot was unable to connect to main server with reason '{msg}'")
                     end(1)
         else:
@@ -93,6 +93,11 @@ def join(task):
         msgJson = once(bot, "message")
         msg = msgJson.toString()
         if "Successful login!" in msg:
+            break
+    while True:
+        msgJson = once(bot, "message")
+        msg = msgJson.toString()
+        if "joined the game" in msg:
             break
     once(bot, "spawn")
     logging.info("Bot spawned into main")
