@@ -58,11 +58,8 @@ def validate():
     
     try:
         if os.environ["ENV"] == "development":
-            print(os.environ["AFKBOT_HOST"])
-            print(os.environ["AFKBOT_PORT"])
             config.botInfo["host"] = os.environ["AFKBOT_HOST"]
             config.botInfo["port"] = os.environ["AFKBOT_PORT"]
-            print("Development environment detected; Set host and port")
     except Exception:
         pass
     
