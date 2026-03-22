@@ -94,11 +94,13 @@ def join(task):
         msg = msgJson.toString()
         if "Successful login!" in msg:
             break
+        task.sleep(0.05)
     while True:
         msgJson = once(bot, "message")
         msg = msgJson.toString()
         if "joined the game" in msg:
             break
+        task.sleep(0.05)
     once(bot, "spawn")
     logging.info("Bot spawned into main")
     off(bot, "message", recv_login_msg)
