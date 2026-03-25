@@ -1,9 +1,8 @@
-
-source .venv/bin/activate
+#!/bin/bash
 
 while true
     do
-        python3 bot.py
+        .venv/bin/python3 bot.py
         echo "Restarting in 5 seconds..."
         sleep 5
     done
