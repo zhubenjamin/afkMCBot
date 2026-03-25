@@ -119,7 +119,7 @@ def chat_msg(this, msg_json, *args):
 @On(bot, "message")
 def detect_disconnect(this, msg_json, *args):
     msg = msg_json.toString()
-    if "exception encountered" in msg:
+    if "exception encountered" in msg or "kicked" in msg:
         logging.info("Detected velocity exception. This means the bot probably disconnected from the main server.")
         if config.postLogin["rejoinOnException"]:
             logging.info("Attempting to rejoin...")
