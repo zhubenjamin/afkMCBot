@@ -74,6 +74,7 @@ def join(task):
                 logging.info("Bot is now logged in")
                 isLoggedIn = True
                 if config.postLogin["useCommandToJoinMainServer"]:
+                    task.sleep(1)
                     bot.chat(config.postLogin["joinMainServerCommand"])
             if isLoggedIn:
                 if "Kicked whilst" in msg or "Could not connect" in msg:
