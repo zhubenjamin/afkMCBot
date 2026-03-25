@@ -1,5 +1,5 @@
 # MAPLETHEDOG
-from javascript import require, On, Once, AsyncTask, once, off, start, stop, abort
+from javascript import require, On, Once, AsyncTask, once, off, start, stop, abort, terminate
 import logging
 from datetime import datetime
 import sys
@@ -50,7 +50,8 @@ def end(code):
         abort(task)
     logging.debug("Goodbye! Logging shutdown.")
     logging.shutdown()
-    sys.exit(0)
+    terminate()
+    sys.exit(code)
 
 @AsyncTask(start=True)
 def join(task):
