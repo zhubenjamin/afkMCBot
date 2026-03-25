@@ -8,16 +8,19 @@ load_dotenv()
 conf = """
 version = "0.0.0" # DO NOT TOUCH
 logLevel = "DEBUG" # can be DEBUG, LOG, WARN, ERROR, CRITICAL
-botType = "highwayBuilder" # DO NOT TOUCH
+botType = "afkBot" # DO NOT TOUCH
 
 botInfo = { # will be forwarded into mineflayer.createBot, except for "useEnvironmentVar"
-    'host': 'anarchy.8b8t.me', 
+    'host': 'mc.hypixel.net', 
     'port': 25565, 
-    'username': "BOT_USERNAME", 
+    'username': "MapleAFK", 
     'hideErrors': False, 
-    "useEnvironmentVar": False, # if True, instead of putting the password in plaintext, you can specify an Environment Variable. If False, just put the password in plaintext.
-    "password": ""
+    "useEnvironmentVar": True, # if True, instead of putting the password in plaintext, you can specify an Environment Variable. If False, just put the password in plaintext.
+    "version": "1.8.8",
+    "auth": "offline",
+    "password": "MAPLEBOTPASSWORD"
 }
+
 """
 
 def validate():
