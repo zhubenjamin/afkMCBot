@@ -69,11 +69,12 @@ def join(task):
         global isLoginSent
         global isLoggedIn
         msg = msg_json.toString()
-        logging.debug(f"CHAT : {msg}")
         if isLoginSent:
             if "Successful login!" in msg:
                 logging.info("Bot is now logged in")
                 isLoggedIn = True
+                if config.postLogin["useCommandToJoinMainServer"]:
+                    bot.chat(config.postLogin["joinMainServerCommand"])
             if isLoggedIn:
                 if "Kicked whilst" in msg or "Could not connect" in msg:
                     logging.info(f"Bot was unable to connect to main server with reason '{msg}'")
@@ -108,6 +109,21 @@ def join(task):
     onListeners.remove(("message", recv_login_msg))
     logging.debug("success")
 asyncTasks.append(join)
+
+@On(bot, "message")
+def chat_msg(this, msg_json, *args):
+    msg = msg_json.toString()
+    logging.debug(f"CHAT : {msg}")
+
+@On(bot, "message")
+def detect_disconnect(this, msg_json, *args):
+    msg = msg_json.toString()
+    if "exception encountered" in msg:
+        logging.info("Detected velocity exception. This means the bot probably disconnected from the main server.")
+        if config.postLogin["rejoinOnException"]:
+            logging.info("Attempting to rejoin...")
+            bot.chat(config.postLogin["joinMainServerCommand"])
+onListeners.append(("message", detect_disconnect))
 
 @On(bot, "error")
 def botError(this, error):

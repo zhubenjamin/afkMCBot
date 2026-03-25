@@ -21,6 +21,12 @@ botInfo = { # will be forwarded into mineflayer.createBot, except for "useEnviro
     "password": "MAPLEBOTPASSWORD"
 }
 
+postLogin = {
+    "useCommandToJoinMainServer": True,
+    "rejoinOnException": True,
+    "joinMainServerCommand": "/server main"
+}
+
 """
 
 def validate():
