@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 conf = """
-version = "0.0.0" # DO NOT TOUCH
+version = "0.1.0" # DO NOT TOUCH
 logLevel = "DEBUG" # can be DEBUG, LOG, WARN, ERROR, CRITICAL
 botType = "afkBot" # DO NOT TOUCH
 
@@ -27,6 +27,29 @@ postLogin = {
     "joinMainServerCommand": "/server main"
 }
 
+commandTriggers = {
+    "onDeath": True,
+    "onChatMessage": {
+        "messages": [
+            "!resetPos",
+        ],
+        "allowedPlayers": [ # Allowed players who can use this command. * for any. 
+            "Notch",
+        ]
+    },
+    "commands": {
+        "tpa": "/tpa Notch",
+        "farm1": "/home farm1",
+    },
+    "defaultCommand": "/home farm1",
+    "chatMessageSwitch": { # if a chat message can be used to switch commands
+        "enabled": True,
+        "allowedPlayers": [
+            "Notch",
+            "Dinnerbone",
+        ]
+    }
+}
 """
 
 def validate():

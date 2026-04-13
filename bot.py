@@ -4,6 +4,7 @@ import logging
 from datetime import datetime
 import sys
 import os
+from pathlib import Path
 import asyncio
 from dotenv import load_dotenv
 
@@ -42,7 +43,16 @@ bot = mineflayer.createBot(botInfo)
 onListeners = []
 asyncTasks = []
 
+if Path("currentCommand.txt").exists():
+    with open("currentCommand.txt") as f:
+        currentCommand = f.readline(0)
+else:
+    currentCommand = config.commandTriggers["defaultCommand"]
+
 def end(code):
+    with open("currentCommand.txt", "w") as f:
+        f.write(currentCommand)
+
     bot.quit()
     for listener in onListeners:
         off(bot, *listener)
@@ -111,10 +121,19 @@ def join(task):
     logging.debug("success")
 asyncTasks.append(join)
 
+@On(bot, "spawn")
+def on_death(this, msg_json, *args):
+    logging.info("Detected spawn event. Bot likely died.")
+    if config.commandTriggers["onDeath"]:
+        logging.info(f"Running command '{config.commandTriggers["commands"][currentCommand]}'")
+        bot.chat(config.commandTriggers["commands"][currentCommand])
+onListeners.append(("spawn", on_death)) # TODO: add other stuff for command triggers
+
 @On(bot, "message")
 def chat_msg(this, msg_json, *args):
     msg = msg_json.toString()
     logging.debug(f"CHAT : {msg}")
+onListeners.append(("message", chat_msg))
 
 @On(bot, "message")
 def detect_disconnect(this, msg_json, *args):
