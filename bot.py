@@ -44,7 +44,7 @@ onListeners = []
 asyncTasks = []
 
 if Path("currentCommand.txt").exists():
-    with open("currentCommand.txt") as f:
+    with open("currentCommand.txt", "w") as f:
         currentCommand = f.readline(0)
 else:
     currentCommand = config.commandTriggers["defaultCommand"]
