@@ -49,6 +49,20 @@ if Path("currentCommand.txt").exists():
 else:
     currentCommand = config.commandTriggers["defaultCommand"]
 
+@AsyncTask(start=False)
+async def onceTimeout(obj, event, timeout=-1, *args):
+    @AsyncTask(start=True)
+    def temp(obj, event, *args):
+        once(obj, event, *args)
+
+@AsyncTask(start=False)
+def rejoin(task, *args):
+    logging.info("Attempting to rejoin...")
+    start = datetime.now()
+    while True:
+        bot.chat(config.postLogin["joinMainServerCommand"])
+        once(bot, "login")
+
 def end(code):
     with open("currentCommand.txt", "w") as f:
         f.write(currentCommand)
@@ -122,9 +136,9 @@ def join(task):
 asyncTasks.append(join)
 
 @On(bot, "spawn")
-def on_death(this, msg_json, *args):
+def on_death(this, *args):
     logging.info("Detected spawn event. Bot likely died.")
-    if config.commandTriggers["onDeath"]:
+    if config.commandTriggers["onDeath"] and config.commandTriggers["enabled"]:
         logging.info(f"Running command '{config.commandTriggers["commands"][currentCommand]}'")
         bot.chat(config.commandTriggers["commands"][currentCommand])
 onListeners.append(("spawn", on_death)) # TODO: add other stuff for command triggers
@@ -141,8 +155,8 @@ def detect_disconnect(this, msg_json, *args):
     if "exception encountered" in msg or "kicked" in msg or "Unable to connect you to" in msg:
         logging.info("Detected velocity exception. This means the bot probably disconnected from the main server.")
         if config.postLogin["rejoinOnException"]:
-            logging.info("Attempting to rejoin...")
-            bot.chat(config.postLogin["joinMainServerCommand"])
+            start(rejoin)
+                
 onListeners.append(("message", detect_disconnect))
 
 @On(bot, "error")
