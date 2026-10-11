@@ -18,8 +18,11 @@ import configValidator
 config = configValidator.validate()
 ### END CONFIG
 
+if not Path("logs").is_dir():
+    os.mkdir("logs")
+
 logFile = f"logs/{datetime.strftime(datetime.now(), '%Y%m%d_%H%M%S')}.log"
-logLevel = eval("logging." + config.logLevel)
+logLevel = getattr(logging, config.logLevel)
 logging.basicConfig(format=f"%(levelname)s : %(name)s : %(asctime)s : %(process)d : %(thread)d : %(message)s", datefmt="%Y/%m/%d %H:%M:%S", encoding="utf-8", level=logLevel, handlers=[logging.FileHandler(logFile, mode="w"), logging.StreamHandler()]) #filename=f"logs/{datetime.strftime(datetime.now(), '%Y%m%d_%H%M%S')}.log", filemode="a", 
 logging.debug("Hello! Logging init.")
 
@@ -44,8 +47,12 @@ onListeners = []
 asyncTasks = []
 
 if Path("currentCommand.txt").exists():
-    with open("currentCommand.txt", "w") as f:
-        currentCommand = f.readline(0)
+    with open("currentCommand.txt", "r+") as f:
+        saved = f.readline().strip()
+    if saved in config.commandTriggers["commands"]:
+        currentCommand = saved
+    else:
+        logging.warning(f"Saved command '{saved}' not found in config, using default")
 else:
     currentCommand = config.commandTriggers["defaultCommand"]
 
@@ -59,17 +66,16 @@ async def onceTimeout(obj, event, timeout=-1, *args):
 def rejoin(task, *args):
     logging.info("Attempting to rejoin...")
     start = datetime.now()
-    while True:
-        bot.chat(config.postLogin["joinMainServerCommand"])
-        once(bot, "login")
+    bot.chat(config.postLogin["joinMainServerCommand"])
+    once(bot, "login")
 
 def end(code):
     with open("currentCommand.txt", "w") as f:
         f.write(currentCommand)
 
     bot.quit()
-    for listener in onListeners:
-        off(bot, *listener)
+    for event_name, listener_func in onListeners:
+        off(bot, event_name, listener_func)
     for task in asyncTasks:
         abort(task)
     logging.debug("Goodbye! Logging shutdown.")
@@ -85,11 +91,13 @@ def join(task):
 
     global isLoggedIn
     global isLoginSent
+    global isReady
     isLoggedIn = False
     isLoginSent = False
+    isReady = False
     task.sleep(0.1)
     @On(bot, "message")
-    def recv_login_msg(this, msg_json, *args):
+    def recv_login_msg(msg_json, *args):
         global isLoginSent
         global isLoggedIn
         msg = msg_json.toString()
@@ -133,24 +141,26 @@ def join(task):
     off(bot, "message", recv_login_msg)
     onListeners.remove(("message", recv_login_msg))
     logging.debug("success")
+    isReady = True
 asyncTasks.append(join)
 
 @On(bot, "spawn")
-def on_death(this, *args):
-    logging.info("Detected spawn event. Bot likely died.")
-    if config.commandTriggers["onDeath"] and config.commandTriggers["enabled"]:
-        logging.info(f"Running command '{config.commandTriggers["commands"][currentCommand]}'")
-        bot.chat(config.commandTriggers["commands"][currentCommand])
+def on_death(*args):
+    if isReady:
+        logging.info("Detected spawn event. Bot likely died.")
+        if config.commandTriggers["onDeath"] and config.commandTriggers["enabled"]:
+            logging.info(f"Running command {config.commandTriggers['commands'][currentCommand]}")
+            bot.chat(config.commandTriggers["commands"][currentCommand])
 onListeners.append(("spawn", on_death)) # TODO: add other stuff for command triggers
 
 @On(bot, "message")
-def chat_msg(this, msg_json, *args):
+def chat_msg(msg_json, *args):
     msg = msg_json.toString()
     logging.debug(f"CHAT : {msg}")
 onListeners.append(("message", chat_msg))
 
 @On(bot, "message")
-def detect_disconnect(this, msg_json, *args):
+def detect_disconnect(msg_json, *args):
     msg = msg_json.toString()
     if "exception encountered" in msg or "kicked" in msg or "Unable to connect you to" in msg:
         logging.info("Detected velocity exception. This means the bot probably disconnected from the main server.")
@@ -160,13 +170,13 @@ def detect_disconnect(this, msg_json, *args):
 onListeners.append(("message", detect_disconnect))
 
 @On(bot, "error")
-def botError(this, error):
+def botError(error):
     logging.error(f"Bot encountered error {error}")
     end(1)
 onListeners.append(("error", botError))
     
 @On(bot, "kicked")
-def botKick(this, reason, *args):
+def botKick(reason, *args):
     try:
         logging.error(f"Bot was kicked with reason {reason}")
     except Exception:

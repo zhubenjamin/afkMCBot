@@ -28,6 +28,7 @@ postLogin = {
 }
 
 commandTriggers = {
+    "enabled": True,
     "onDeath": True,
     "onChatMessage": {
         "messages": [
